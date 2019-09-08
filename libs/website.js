@@ -1,4 +1,5 @@
 
+var https = require('https');
 var fs = require('fs');
 var path = require('path');
 
@@ -277,14 +278,24 @@ module.exports = function(logger){
     });
 
     try {
+        if (portalConfig.website.tlsOptions && portalConfig.website.tlsOptions.enabled === true) {
+            var TLSoptions = {
+              key: fs.readFileSync(portalConfig.website.tlsOptions.key),
+              cert: fs.readFileSync(portalConfig.website.tlsOptions.cert)
+            };
+
+            https.createServer(TLSoptions, app).listen(portalConfig.website.port, portalConfig.website.host, function() {
+                logger.debug(logSystem, 'Server', 'TLS Website started on ' + portalConfig.website.host + ':' + portalConfig.website.port);
+            });        
+        } else {
         app.listen(portalConfig.website.port, portalConfig.website.host, function () {
             logger.debug(logSystem, 'Server', 'Website started on ' + portalConfig.website.host + ':' + portalConfig.website.port);
         });
+        }
     }
     catch(e){
+        console.log(e);
         logger.error(logSystem, 'Server', 'Could not start website on ' + portalConfig.website.host + ':' + portalConfig.website.port
             +  ' - its either in use or you do not have permission');
     }
-
-
 };
